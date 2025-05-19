@@ -1,0 +1,748 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.5">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">import React, { useState, useEffect } from 'react';</p>
+<p class="p1">import { XCircle, Plus, Minus, BarChart2 } from 'lucide-react';</p>
+<p class="p2"><br></p>
+<p class="p1">// メインコンポーネント</p>
+<p class="p1">function MedakaSimulation() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>// 環境パラメータの状態</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [waterTemp, setWaterTemp] = useState(25);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [food, setFood] = useState(50);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [waterQuality, setWaterQuality] = useState(80);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [day, setDay] = useState(1);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [isPlaying, setIsPlaying] = useState(false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [speed, setSpeed] = useState(1);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// メダカの卵と稚魚の状態</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [eggs, setEggs] = useState([]);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [fry, setFry] = useState([]);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [adultFish, setAdultFish] = useState([</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{ id: 1, x: 50, y: 50, direction: Math.random() * 360, gender: 'male', size: 20, age: 100, energy: 100 },</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{ id: 2, x: 150, y: 70, direction: Math.random() * 360, gender: 'female', size: 22, age: 100, energy: 100 }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>]);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// グラフデータ</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [showStats, setShowStats] = useState(false);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const [stats, setStats] = useState({</p>
+<p class="p1"><span class="Apple-converted-space">    </span>eggs: [0],</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fry: [0],</p>
+<p class="p1"><span class="Apple-converted-space">    </span>adults: [2]</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// 卵を産む関数</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const layEggs = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 条件チェック: 雌雄のペアがいて、エネルギーが十分あるか</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const males = adultFish.filter(fish =&gt; fish.gender === 'male' &amp;&amp; fish.energy &gt; 70);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const females = adultFish.filter(fish =&gt; fish.gender === 'female' &amp;&amp; fish.energy &gt; 70);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (males.length &gt; 0 &amp;&amp; females.length &gt; 0) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 卵の数は環境要因に影響される</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const eggCount = Math.floor(Math.random() * 3) + 1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const eggQuality = calculateEggQuality();</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const newEggs = [];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>for (let i = 0; i &lt; eggCount; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 雌の位置付近に卵を産む</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const femalePosition = females[0];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>newEggs.push({</p>
+<p class="p1"><span class="Apple-converted-space">          </span>id: Date.now() + i,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>x: femalePosition.x + (Math.random() * 20 - 10),</p>
+<p class="p1"><span class="Apple-converted-space">          </span>y: femalePosition.y + (Math.random() * 20 - 10),</p>
+<p class="p1"><span class="Apple-converted-space">          </span>stage: 0, // 発生段階 (0-4)</p>
+<p class="p1"><span class="Apple-converted-space">          </span>quality: eggQuality,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>age: 0,</p>
+<p class="p1"><span class="Apple-converted-space">          </span>willHatch: Math.random() &lt; eggQuality // 孵化確率は卵の質に依存</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 卵を産んだメダカのエネルギーを減らす</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const updatedAdultFish = adultFish.map(fish =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (fish.id === females[0].id || fish.id === males[0].id) {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>return {...fish, energy: Math.max(fish.energy - 30, 10)};</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return fish;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>setAdultFish(updatedAdultFish);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setEggs([...eggs, ...newEggs]);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// 卵の質を計算する関数</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const calculateEggQuality = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 環境パラメータが卵の質に影響</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let quality = 0.5; // 基本値</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 水温の影響 (22-28℃が最適)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (waterTemp &gt;= 22 &amp;&amp; waterTemp &lt;= 28) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>quality += 0.2;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>quality -= 0.2;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 水質の影響</p>
+<p class="p1"><span class="Apple-converted-space">    </span>quality += (waterQuality / 100) * 0.2;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 餌の影響</p>
+<p class="p1"><span class="Apple-converted-space">    </span>quality += (food / 100) * 0.1;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>return Math.max(0.1, Math.min(quality, 1.0));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// シミュレーションのメインループ</p>
+<p class="p1"><span class="Apple-converted-space">  </span>useEffect(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!isPlaying) return;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const interval = setInterval(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 日数を進める</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setDay(prevDay =&gt; prevDay + 1);</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// ランダムに卵を産む</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (Math.random() &lt; 0.1) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>layEggs();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 卵の発育を進める</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setEggs(prevEggs =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return prevEggs.map(egg =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 発生速度は水温と水質に影響される</p>
+<p class="p1"><span class="Apple-converted-space">          </span>let developmentRate = 0.1; // 基本発生速度</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 水温の影響 (22-28℃が最適)</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (waterTemp &gt;= 22 &amp;&amp; waterTemp &lt;= 28) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>developmentRate += 0.05;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>} else if (waterTemp &lt; 15 || waterTemp &gt; 32) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>developmentRate -= 0.05;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 水質の影響</p>
+<p class="p1"><span class="Apple-converted-space">          </span>developmentRate += ((waterQuality - 50) / 100) * 0.05;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 新しいステージ</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const newStage = Math.min(egg.stage + developmentRate, 4);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const newAge = egg.age + 1;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 孵化条件</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const shouldHatch = newStage &gt;= 4 &amp;&amp; egg.willHatch;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 卵が孵化する場合</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (shouldHatch) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// 稚魚を追加</p>
+<p class="p1"><span class="Apple-converted-space">            </span>setFry(prevFry =&gt; [...prevFry, {</p>
+<p class="p1"><span class="Apple-converted-space">              </span>id: Date.now() + Math.random(),</p>
+<p class="p1"><span class="Apple-converted-space">              </span>x: egg.x,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>y: egg.y,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>direction: Math.random() * 360,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>size: 5,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>age: 0,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>energy: 50,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>gender: Math.random() &lt; 0.5 ? 'male' : 'female'</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}]);</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// この卵は削除対象</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return null;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>return { ...egg, stage: newStage, age: newAge };</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}).filter(egg =&gt; egg !== null); // nullを除外</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 稚魚の成長</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setFry(prevFry =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return prevFry.map(baby =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 成長率は環境に影響される</p>
+<p class="p1"><span class="Apple-converted-space">          </span>let growthRate = 0.1; // 基本成長率</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 水温の影響</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (waterTemp &gt;= 22 &amp;&amp; waterTemp &lt;= 28) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>growthRate += 0.05;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>} else if (waterTemp &lt; 15 || waterTemp &gt; 32) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>growthRate -= 0.05;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 餌の影響</p>
+<p class="p1"><span class="Apple-converted-space">          </span>growthRate += (food / 100) * 0.1;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 水質の影響</p>
+<p class="p1"><span class="Apple-converted-space">          </span>growthRate += ((waterQuality - 50) / 100) * 0.05;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 稚魚のエネルギー更新</p>
+<p class="p1"><span class="Apple-converted-space">          </span>let newEnergy = baby.energy - 1 + (food / 100) * 2;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>newEnergy = Math.max(0, Math.min(newEnergy, 100));</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// サイズと年齢の更新</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const newSize = baby.size + growthRate;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const newAge = baby.age + 1;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 新しい位置を計算</p>
+<p class="p1"><span class="Apple-converted-space">          </span>let newX = baby.x + (Math.cos(baby.direction * Math.PI / 180) * 2);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>let newY = baby.y + (Math.sin(baby.direction * Math.PI / 180) * 2);</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 画面境界でのバウンド</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (newX &lt; 0 || newX &gt; 300) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>newX = Math.max(0, Math.min(newX, 300));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const newDirection = (180 - baby.direction) % 360;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return {...baby, x: newX, direction: newDirection, size: newSize, age: newAge, energy: newEnergy};</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (newY &lt; 0 || newY &gt; 200) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>newY = Math.max(0, Math.min(newY, 200));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const newDirection = (360 - baby.direction) % 360;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return {...baby, y: newY, direction: newDirection, size: newSize, age: newAge, energy: newEnergy};</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 方向をときどき変える</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const newDirection = Math.random() &lt; 0.1 ?<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                               </span>baby.direction + (Math.random() * 60 - 30) :<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                               </span>baby.direction;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 稚魚が成魚になる条件 (サイズが15以上)</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (newSize &gt;= 15) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// 成魚リストに追加</p>
+<p class="p1"><span class="Apple-converted-space">            </span>setAdultFish(prevAdults =&gt; [...prevAdults, {</p>
+<p class="p1"><span class="Apple-converted-space">              </span>id: baby.id,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>x: newX,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>y: newY,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>direction: newDirection,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>size: newSize,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>age: newAge,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>energy: newEnergy,</p>
+<p class="p1"><span class="Apple-converted-space">              </span>gender: baby.gender</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}]);</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// この稚魚は削除対象</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return null;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 稚魚が死ぬ条件 (エネルギーが0)</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (newEnergy &lt;= 0) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return null;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>return {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>...baby,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>x: newX,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>y: newY,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>direction: newDirection,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>size: newSize,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>age: newAge,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>energy: newEnergy</p>
+<p class="p1"><span class="Apple-converted-space">          </span>};</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}).filter(baby =&gt; baby !== null); // nullを除外</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 成魚の行動更新</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setAdultFish(prevAdults =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return prevAdults.map(fish =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// エネルギー更新</p>
+<p class="p1"><span class="Apple-converted-space">          </span>let newEnergy = fish.energy - 0.5 + (food / 100) * 1.5;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>newEnergy = Math.max(0, Math.min(newEnergy, 100));</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 年齢更新</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const newAge = fish.age + 1;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 新しい位置を計算</p>
+<p class="p1"><span class="Apple-converted-space">          </span>let newX = fish.x + (Math.cos(fish.direction * Math.PI / 180) * 1);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>let newY = fish.y + (Math.sin(fish.direction * Math.PI / 180) * 1);</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 画面境界でのバウンド</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (newX &lt; 0 || newX &gt; 300) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>newX = Math.max(0, Math.min(newX, 300));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const newDirection = (180 - fish.direction) % 360;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return {...fish, x: newX, direction: newDirection, age: newAge, energy: newEnergy};</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (newY &lt; 0 || newY &gt; 200) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>newY = Math.max(0, Math.min(newY, 200));</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const newDirection = (360 - fish.direction) % 360;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return {...fish, y: newY, direction: newDirection, age: newAge, energy: newEnergy};</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 方向をときどき変える</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const newDirection = Math.random() &lt; 0.05 ?<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                               </span>fish.direction + (Math.random() * 60 - 30) :<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                               </span>fish.direction;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>// 成魚が死ぬ条件 (エネルギーが0または年齢が200以上)</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if (newEnergy &lt;= 0 || newAge &gt;= 200) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>return null;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>}</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>return {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>...fish,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>x: newX,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>y: newY,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>direction: newDirection,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>age: newAge,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>energy: newEnergy</p>
+<p class="p1"><span class="Apple-converted-space">          </span>};</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}).filter(fish =&gt; fish !== null); // nullを除外</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>// 統計情報を更新</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setStats(prevStats =&gt; ({</p>
+<p class="p1"><span class="Apple-converted-space">        </span>eggs: [...prevStats.eggs, eggs.length],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>fry: [...prevStats.fry, fry.length],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>adults: [...prevStats.adults, adultFish.length]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}));</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>}, 1000 / speed);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>return () =&gt; clearInterval(interval);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}, [isPlaying, waterTemp, food, waterQuality, speed, eggs, fry, adultFish]);</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// 水槽をリセットする関数</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const resetTank = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setEggs([]);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setFry([]);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setAdultFish([</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ id: 1, x: 50, y: 50, direction: Math.random() * 360, gender: 'male', size: 20, age: 100, energy: 100 },</p>
+<p class="p1"><span class="Apple-converted-space">      </span>{ id: 2, x: 150, y: 70, direction: Math.random() * 360, gender: 'female', size: 22, age: 100, energy: 100 }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>]);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setDay(1);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>setStats({</p>
+<p class="p1"><span class="Apple-converted-space">      </span>eggs: [0],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fry: [0],</p>
+<p class="p1"><span class="Apple-converted-space">      </span>adults: [2]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// 卵の発生段階に応じた色を返す</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getEggColor = (stage) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const colors = [</p>
+<p class="p1"><span class="Apple-converted-space">      </span>'rgba(255, 255, 255, 0.7)', // 段階0: 白い</p>
+<p class="p1"><span class="Apple-converted-space">      </span>'rgba(255, 245, 200, 0.7)',<span class="Apple-converted-space">  </span>// 段階1: 薄い黄色</p>
+<p class="p1"><span class="Apple-converted-space">      </span>'rgba(255, 235, 150, 0.7)',<span class="Apple-converted-space">  </span>// 段階2: 濃い黄色</p>
+<p class="p1"><span class="Apple-converted-space">      </span>'rgba(255, 220, 100, 0.7)',<span class="Apple-converted-space">  </span>// 段階3: さらに濃い黄色</p>
+<p class="p1"><span class="Apple-converted-space">      </span>'rgba(255, 200, 50, 0.7)'<span class="Apple-converted-space">    </span>// 段階4: オレンジ</p>
+<p class="p1"><span class="Apple-converted-space">    </span>];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return colors[Math.min(Math.floor(stage), 4)];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// 水質に基づく水の色を返す</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getWaterColor = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (waterQuality &gt;= 80) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return '#c9f0ff'; // きれいな水</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} else if (waterQuality &gt;= 50) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return '#d5e8f0'; // やや濁った水</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} else if (waterQuality &gt;= 30) {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return '#e0e0d5'; // 濁った水</p>
+<p class="p1"><span class="Apple-converted-space">    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return '#e5d5c5'; // 非常に濁った水</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>// メダカのシルエットを描画する関数</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const renderFish = (fish, isMale) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const scaleX = fish.size / 20;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const scaleY = fish.size / 20;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// 基本色の設定</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const bodyColor = isMale ? "#b5d0e8" : "#e8d0b5"; // オスは青みがかった銀色、メスは薄い金色</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const finColor = isMale ? "#a0c0e0" : "#e0c0a0";<span class="Apple-converted-space">  </span>// ひれの色</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;g<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>transform={`translate(${fish.x}, ${fish.y}) rotate(${fish.direction}) scale(${scaleX}, ${scaleY})`}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>style={{ transition: 'transform 0.5s ease' }}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* メダカの体 */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;ellipse<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>cx="0"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>cy="0"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>rx="10"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>ry="4"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill={bodyColor}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>stroke="#333"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>strokeWidth="0.5"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 頭 */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;path<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>d="M-10,0 C-11,2 -12,2 -14,0 C-12,-2 -11,-2 -10,0 Z"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill={bodyColor}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>stroke="#333"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>strokeWidth="0.5"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 尾びれ */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;path<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>d="M10,0 C12,3 14,4 16,0 C14,-4 12,-3 10,0 Z"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill={finColor}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>stroke="#333"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>strokeWidth="0.3"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 目 */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;circle cx="-12" cy="0" r="1" fill="#000" /&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 背びれ - オスとメスで形状が異なる */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{isMale ? (</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// オスの背びれ - 三角形で長い</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;path<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>d="M-5,-4 L0,-9 L5,-4 Z"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>fill={finColor}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>stroke="#333"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>strokeWidth="0.3"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>) : (</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// メスの背びれ - 丸みを帯びて短い</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;path<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>d="M-5,-4 C-2,-6 2,-6 5,-4"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>fill="none"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>stroke={finColor}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>strokeWidth="1"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>)}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 尻びれ - オスとメスで形状が異なる */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{isMale ? (</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// オスの尻びれ - 大きく角張っている</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;path<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>d="M0,4 L3,8 L7,4"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>fill={finColor}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>stroke="#333"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>strokeWidth="0.3"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>) : (</p>
+<p class="p1"><span class="Apple-converted-space">          </span>// メスの尻びれ - 小さく丸みがある</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;path<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>d="M0,4 C2,5 4,5 5,4"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>fill="none"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>stroke={finColor}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>strokeWidth="1"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>)}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 腹びれ */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;path<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>d="M-2,4 L0,6 L2,4"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill={finColor}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>stroke="#333"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>strokeWidth="0.3"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 胸びれ */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;path<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>d="M-8,0 L-9,2 L-7,1"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill={finColor}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>stroke="#333"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>strokeWidth="0.3"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 線模様 */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;path<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>d="M-8,0 C-4,0 0,0 8,0"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill="none"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>stroke="#444"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>strokeWidth="0.2"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>opacity="0.5"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/g&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><span class="Apple-converted-space">  </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>return (</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div className="flex flex-col w-full h-full bg-gray-100 p-4 space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;h1 className="text-2xl font-bold text-center"&gt;メダカの生態系シミュレーション&lt;/h1&gt;</p>
+<p class="p2"><span class="Apple-converted-space">      </span></p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div className="flex space-x-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 左側: シミュレーション */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="w-3/4 bg-white rounded-lg shadow-md p-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="flex justify-between mb-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex space-x-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;button<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>className={`px-3 py-1 rounded-md ${isPlaying ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onClick={() =&gt; setIsPlaying(!isPlaying)}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>{isPlaying ? '一時停止' : '開始'}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">              </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;button<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="px-3 py-1 bg-blue-500 text-white rounded-md"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onClick={resetTank}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>リセット</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/button&gt;</p>
+<p class="p2"><span class="Apple-converted-space">              </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="flex items-center space-x-1 ml-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                  </span>className="p-1 bg-gray-200 rounded"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>onClick={() =&gt; setSpeed(Math.max(1, speed - 1))}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>disabled={speed &lt;= 1}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;Minus size={16} /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span className="mx-1"&gt;速度: {speed}x&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                  </span>className="p-1 bg-gray-200 rounded"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>onClick={() =&gt; setSpeed(Math.min(5, speed + 1))}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>disabled={speed &gt;= 5}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;Plus size={16} /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span className="mr-2"&gt;統計:&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;button<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>className={`p-1 rounded ${showStats ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>onClick={() =&gt; setShowStats(!showStats)}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;BarChart2 size={16} /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="text-sm mb-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span className="font-bold"&gt;日数: {day}日目&lt;/span&gt; |<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span className="ml-2"&gt;卵: {eggs.length}個&lt;/span&gt; |<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span className="ml-2"&gt;稚魚: {fry.length}匹&lt;/span&gt; |<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span className="ml-2"&gt;成魚: {adultFish.length}匹&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>{/* 水槽 */}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>className="relative w-full h-64 border-2 border-blue-300 rounded-md overflow-hidden"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>style={{ backgroundColor: getWaterColor() }}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{/* 水草 */}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;svg width="100%" height="100%" className="absolute top-0 left-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;path d="M20,200 C30,180 25,160 35,140 C45,120 40,100 50,80"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>stroke="green" strokeWidth="2" fill="none" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;path d="M30,200 C40,190 35,170 50,160 C60,150 55,130 70,120"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>stroke="green" strokeWidth="2" fill="none" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;path d="M270,200 C260,180 265,160 255,140 C245,120 250,100 240,80"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>stroke="green" strokeWidth="2" fill="none" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;path d="M260,200 C250,190 255,170 240,160 C230,150 235,130 220,120"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>stroke="green" strokeWidth="2" fill="none" /&gt;</p>
+<p class="p2"><span class="Apple-converted-space">              </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>{/* 卵を描画 */}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>{eggs.map(egg =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;circle<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                  </span>key={egg.id}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>cx={egg.x}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>cy={egg.y}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>r={3}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>fill={getEggColor(egg.stage)}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>stroke="#aaa"</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>strokeWidth="0.5"</p>
+<p class="p1"><span class="Apple-converted-space">                </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>))}</p>
+<p class="p2"><span class="Apple-converted-space">              </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>{/* 稚魚を描画 */}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>{fry.map(baby =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;g key={baby.id}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{renderFish(baby, baby.gender === 'male')}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/g&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>))}</p>
+<p class="p2"><span class="Apple-converted-space">              </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>{/* 成魚を描画 */}</p>
+<p class="p1"><span class="Apple-converted-space">              </span>{adultFish.map(fish =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;g key={fish.id}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{renderFish(fish, fish.gender === 'male')}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/g&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>))}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/svg&gt;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>{/* メダカの性別に関する凡例 */}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="absolute bottom-2 right-2 bg-white bg-opacity-70 p-1 rounded-md flex flex-col text-xs"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="w-3 h-3 bg-blue-300 mr-1"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span&gt;オス (背びれ・尻びれが大きい)&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="w-3 h-3 bg-yellow-200 mr-1"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;span&gt;メス (背びれ・尻びれが小さい)&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>{/* 統計グラフ */}</p>
+<p class="p1"><span class="Apple-converted-space">          </span>{showStats &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="mt-4 h-40 border border-gray-300 rounded-md p-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;div className="relative w-full h-full"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>{/* Y軸 */}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="absolute left-0 top-0 bottom-0 w-1 bg-gray-200"&gt;&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>{/* X軸 */}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="absolute left-0 right-0 bottom-0 h-1 bg-gray-200"&gt;&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>{/* グリッドライン */}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>{[0, 0.25, 0.5, 0.75].map((ratio, i) =&gt; (</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>key={i}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>className="absolute left-0 right-0 border-t border-gray-100"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>style={{top: `${ratio * 100}%`}}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>))}</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>{/* データライン */}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;svg width="100%" height="100%"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{/* 卵の数 */}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{stats.eggs.length &gt; 1 &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;polyline<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                      </span>points={stats.eggs.slice(-30).map((val, i, arr) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const maxVal = Math.max(...stats.eggs, ...stats.fry, ...stats.adults, 10);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const x = i * (100 / (arr.length - 1));</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const y = 100 - (val / maxVal) * 100;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>return `${x}% ${y}%`;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>}).join(' ')}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>stroke="yellow"</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>strokeWidth="2"</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>fill="none"</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>)}</p>
+<p class="p2"><span class="Apple-converted-space">                  </span></p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{/* 稚魚の数 */}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{stats.fry.length &gt; 1 &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;polyline<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                      </span>points={stats.fry.slice(-30).map((val, i, arr) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const maxVal = Math.max(...stats.eggs, ...stats.fry, ...stats.adults, 10);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const x = i * (100 / (arr.length - 1));</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const y = 100 - (val / maxVal) * 100;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>return `${x}% ${y}%`;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>}).join(' ')}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>stroke="orange"</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>strokeWidth="2"</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>fill="none"</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>)}</p>
+<p class="p2"><span class="Apple-converted-space">                  </span></p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{/* 成魚の数 */}</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>{stats.adults.length &gt; 1 &amp;&amp; (</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;polyline<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                      </span>points={stats.adults.slice(-30).map((val, i, arr) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const maxVal = Math.max(...stats.eggs, ...stats.fry, ...stats.adults, 10);</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const x = i * (100 / (arr.length - 1));</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>const y = 100 - (val / maxVal) * 100;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>return `${x}% ${y}%`;</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>}).join(' ')}</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>stroke="blue"</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>strokeWidth="2"</p>
+<p class="p1"><span class="Apple-converted-space">                      </span>fill="none"</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/svg&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>{/* 凡例 */}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div className="absolute top-2 right-2 bg-white bg-opacity-70 p-1 rounded-md flex flex-col text-xs"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="w-3 h-3 bg-yellow-400 mr-1"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;span&gt;卵&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="w-3 h-3 bg-orange-400 mr-1"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;span&gt;稚魚&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;div className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div className="w-3 h-3 bg-blue-400 mr-1"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;span&gt;成魚&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                  </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>)}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>{/* 右側: コントロール */}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div className="w-1/4 bg-white rounded-lg shadow-md p-4 flex flex-col space-y-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label className="block text-sm font-medium mb-1"&gt;水温 (°C)&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;input<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>type="range"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>min="15"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>max="35"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={waterTemp}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>onChange={(e) =&gt; setWaterTemp(parseInt(e.target.value))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="w-full"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span className="ml-2 w-8 text-center"&gt;{waterTemp}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="text-xs mt-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span className={waterTemp &gt;= 22 &amp;&amp; waterTemp &lt;= 28 ? 'text-green-600' : 'text-gray-500'}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>最適: 22~28°C</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label className="block text-sm font-medium mb-1"&gt;餌の量&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;input<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>type="range"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>min="0"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>max="100"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={food}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>onChange={(e) =&gt; setFood(parseInt(e.target.value))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="w-full"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span className="ml-2 w-8 text-center"&gt;{food}%&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>className="mt-1 px-2 py-1 bg-green-500 text-white text-xs rounded"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>onClick={() =&gt; setFood(Math.min(food + 20, 100))}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>餌やり (+20%)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;label className="block text-sm font-medium mb-1"&gt;水質&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;input<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>type="range”</p>
+<p class="p1"><span class="Apple-converted-space">                </span>min="0"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>max="100"<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>value={waterQuality}<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>onChange={(e) =&gt; setWaterQuality(parseInt(e.target.value))}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className="w-full"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>/&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span className="ml-2 w-8 text-center"&gt;{waterQuality}%&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div className="flex justify-between text-xs mt-1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span&gt;汚い&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;span&gt;きれい&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">              </span>className="mt-1 px-2 py-1 bg-blue-500 text-white text-xs rounded"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>onClick={() =&gt; setWaterQuality(Math.min(waterQuality + 30, 100))}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>水そうそうじ (+30%)</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">          </span></p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;div className="border-t pt-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h3 className="font-medium mb-2"&gt;解説&lt;/h3&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;ul className="text-xs space-y-2"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;li&gt;• &lt;span className="font-semibold"&gt;水温&lt;/span&gt;: 22~28℃が最適です。この範囲外だと卵の発生が遅くなったり、孵化率が下がります。&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;li&gt;• &lt;span className="font-semibold"&gt;餌&lt;/span&gt;: 餌が多いとメダカの成長が早くなり、エネルギーが回復します。&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;li&gt;• &lt;span className="font-semibold"&gt;水質&lt;/span&gt;: 水質が悪いと卵の発生が遅くなり、孵化率も下がります。&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;li&gt;• オスとメスのペアがいると、条件が良ければ卵を産みます。&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">              </span>&lt;li&gt;• 卵は段階的に成長し、最終的に孵化します（色の変化で確認できます）。&lt;/li&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/ul&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// ページへのレンダリング</p>
+<p class="p1">ReactDOM.render(&lt;MedakaSimulation /&gt;, document.getElementById('root'));</p>
+</body>
+</html>
